@@ -75,8 +75,9 @@ router.post("/", async (req, res) => {
     // cust_insertedby_empid is required by the database (NOT NULL) but the
     // frontend doesn't currently send it (there's no "which employee is
     // logged in" tracking yet). Rather than fail every customer save, fall
-    // back to Kamala's employee record (EMP024) when nothing was sent, so
-    // this doesn't block saving while that bigger feature gets built later.
+    // back to Kamala's employee record (EMP003, after the ID renumbering)
+    // when nothing was sent, so this doesn't block saving while that
+    // bigger feature gets built later.
     const result = await pool.query(
       `INSERT INTO customer (
         cust__fname, cust_lname, cust_email, cust_phone,
@@ -85,7 +86,7 @@ router.post("/", async (req, res) => {
         cust_city, cust_state, cust_pinzip, cust_insertedby_empid
       ) VALUES (
         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,
-        COALESCE($15, (SELECT emp_pk FROM employee WHERE emp_id = 'EMP024'))
+        COALESCE($15, (SELECT emp_pk FROM employee WHERE emp_id = 'EMP003'))
       )
       RETURNING cust_pk, cust_id, cust__fname, cust_lname, cust_email, cust_phone,
                 cust_country, cust_addressline1, cust_addressline2, cust_city,

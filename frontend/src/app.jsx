@@ -871,10 +871,15 @@ useEffect(() => {
     try {
       const result = await createCustomer(apiPayload, authToken);
       if (result.success) {
-        setSuccessMessage('Customer saved successfully.');
+        setSuccessMessage(`Customer registered successfully! Customer ID: ${result.data.cust_id}`);
         await loadCustomersAndEmployees(authToken);
-        clearCustomerForm();
-        setActiveTab('dashboard');
+        // Wait 2 seconds before moving to the dashboard, so the success
+        // message is actually visible next to the Register button first,
+        // instead of switching pages instantly and hiding it off-screen.
+        setTimeout(() => {
+          clearCustomerForm();
+          setActiveTab('dashboard');
+        }, 2000);
       } else {
         setCustomerTopError(result.message || 'Could not save this customer. Please try again.');
       }
@@ -1081,12 +1086,21 @@ useEffect(() => {
     try {
       const result = await createEmployee(apiPayload, authToken);
       if (result.success) {
-        setSuccessMessage('Employee registered successfully.');
+        setSuccessMessage(`Employee registered successfully! Employee ID: ${result.data.emp_id}`);
         await loadCustomersAndEmployees(authToken);
-        clearEmployeeForm();
-        setActiveTab('employeeRecords');
+        // Wait 2 seconds before moving to the records page, so the success
+        // message is actually visible next to the Register button first,
+        // instead of switching pages instantly and hiding it off-screen.
+        setTimeout(() => {
+          clearEmployeeForm();
+          setActiveTab('employeeRecords');
+        }, 2000);
       } else {
         setEmployeeTopError(result.message || 'Could not register this employee. Please try again.');
+        // Refresh the suggested Employee ID after a failed save too - otherwise
+        // it keeps retrying with the same (possibly now-taken) ID every time,
+        // e.g. if someone else just registered an employee with that same ID.
+        await loadCustomersAndEmployees(authToken);
       }
     } catch (err) {
       console.error('Failed to save employee:', err);
@@ -1802,6 +1816,7 @@ useEffect(() => {
                 {/* Employee Management Tab */}
                 {activeTab === 'employeeRecords' && (
                   <div style={styles.cardSection}>
+                    {successMessage && <div style={styles.successBanner}>{successMessage}</div>}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                       <h3 style={{ ...styles.sectionTitle, margin: 0 }}>ALL Employee Records</h3>
                       <button onClick={handleAddNewEmployeeClick} style={styles.addNewInlineBtn}>
@@ -1872,9 +1887,6 @@ useEffect(() => {
                     <h3 style={styles.sectionTitle}>
                       {editEmployeeId ? 'Edit Employee' : 'Enter Employee Personal Information'}
                     </h3>
-
-                    {EmployeeTopError && <div style={styles.errorBanner}>{EmployeeTopError}</div>}
-                    {successMessage && <div style={styles.successBanner}>{successMessage}</div>}
 
                     <form onSubmit={handleSaveEmployee} style={styles.addFormGrid}>
                       <div style={{ ...styles.inputGroup, gridColumn: 'span 2' }}>
@@ -2177,6 +2189,9 @@ useEffect(() => {
                         />
                       </div>
 
+                      {EmployeeTopError && <div style={{ ...styles.errorBanner, gridColumn: 'span 2' }}>{EmployeeTopError}</div>}
+                      {successMessage && <div style={{ ...styles.successBanner, gridColumn: 'span 2' }}>{successMessage}</div>}
+
                       <div style={{ gridColumn: 'span 2', display: 'flex', gap: '12px', marginTop: '10px' }}>
                         <button type="submit" style={{ ...styles.submitButton, flex: 1, marginTop: 0 }}>
                           Register Employee
@@ -2266,9 +2281,6 @@ useEffect(() => {
                     <h3 style={styles.sectionTitle}>
                       {editId !== null ? 'Edit Customer' : 'Enter Customer Personal Information'}
                     </h3>
-
-                    {customerTopError && <div style={styles.errorBanner}>{customerTopError}</div>}
-                    {successMessage && <div style={styles.successBanner}>{successMessage}</div>}
 
                     <form onSubmit={handleSaveCustomer} style={styles.addFormGrid}>
                       <div style={{ ...styles.inputGroup, gridColumn: 'span 2' }}>
@@ -2489,6 +2501,9 @@ useEffect(() => {
                           autoComplete="off"
                         />
                       </div>
+
+                      {customerTopError && <div style={{ ...styles.errorBanner, gridColumn: 'span 2' }}>{customerTopError}</div>}
+                      {successMessage && <div style={{ ...styles.successBanner, gridColumn: 'span 2' }}>{successMessage}</div>}
 
                       <div style={{ gridColumn: 'span 2', display: 'flex', gap: '12px', marginTop: '10px' }}>
                         <button type="submit" style={{ ...styles.submitButton, flex: 1, marginTop: 0 }}>
