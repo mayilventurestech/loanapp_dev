@@ -751,6 +751,7 @@ useEffect(() => {
           pin_zip: c.cust_pinzip,
           country: c.cust_country,
           pan: c.cust_pan || 'N/A',
+          aadhaar: c.cust_aadhar || 'N/A',
           loanAmount: 'N/A',
           status: 'Active'
         }));
@@ -782,6 +783,7 @@ useEffect(() => {
           pin_zip: e.emp_pinzip,
           country: e.emp_country,
           pan: e.emp_pan || 'N/A',
+          aadhar: e.emp_aadhar || 'N/A',
           status: e.emp_status === false ? 'Inactive' : 'Active'
         }));
         setEmployees(mappedEmp);
@@ -1827,7 +1829,7 @@ useEffect(() => {
                                 <div style={{ fontSize: '12px', color: '#64748b' }}>{emp.phone}</div>
                               </td>
                               <td style={styles.td}>
-                                <div style={{ fontSize: '12px' }}>Aadhaar: <strong>XXXXXXXX4586</strong></div>
+                                <div style={{ fontSize: '12px' }}>Aadhaar: <strong>{emp.aadhar || 'N/A'}</strong></div>
                                 <div style={{ fontSize: '12px' }}>PAN: <strong>{emp.pan || 'N/A'}</strong></div>
                               </td>
                               <td style={styles.td}>
@@ -2221,7 +2223,7 @@ useEffect(() => {
                                 <div style={{ fontSize: '12px', color: '#64748b' }}>{c.phone}</div>
                               </td>
                               <td style={styles.td}>
-                                <div style={{ fontSize: '12px' }}>Aadhaar: <strong>XXXXXXXX3456</strong></div>
+                                <div style={{ fontSize: '12px' }}>Aadhaar: <strong>{c.aadhaar || 'N/A'}</strong></div>
                                 <div style={{ fontSize: '12px' }}>PAN: <strong>{c.pan || 'N/A'}</strong></div>
                               </td>
                               <td style={styles.td}>
@@ -2761,7 +2763,7 @@ useEffect(() => {
                                 <div style={{ fontSize: '12px', color: '#64748b' }}>{c.phone}</div>
                               </td>
                               <td style={styles.td}>
-                                <div style={{ fontSize: '12px' }}>Aadhaar: <strong>[Aadhaar Redacted]</strong></div>
+                                <div style={{ fontSize: '12px' }}>Aadhaar: <strong>{c.aadhaar || 'N/A'}</strong></div>
                                 <div style={{ fontSize: '12px' }}>PAN: <strong>{c.pan || 'N/A'}</strong></div>
                               </td>
                               <td style={styles.td}>

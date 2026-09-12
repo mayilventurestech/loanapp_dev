@@ -1,8 +1,21 @@
 const express = require("express");
 const pool = require("../db");
-const { encryptValue } = require("../crypto-helper");
+const { encryptValue, decryptValue } = require("../crypto-helper");
 
 const router = express.Router();
+
+// Safely turns a stored (base64) Aadhar/PAN value back into plain text.
+// Returns null if there's nothing stored, or if it can't be decrypted
+// (this protects against old/test rows that were never properly encrypted).
+function safeDecrypt(base64Value) {
+  if (!base64Value) return null;
+  try {
+    const buffer = Buffer.from(base64Value, "base64");
+    return decryptValue(buffer);
+  } catch (err) {
+    return null;
+  }
+}
 
 // GET all employees, optionally filtered by designation level
 // e.g. /api/employees?level=L6
@@ -16,6 +29,7 @@ router.get("/", async (req, res) => {
         `SELECT e.emp_id, e.emp_fname, e.emp_lname, e.emp_email, e.emp_phone,
                 e.emp_branch_code, e.emp_city, e.emp_state, e.emp_joindt,
                 e.emp_status, e.emp_reporting_manager_id, e.emp_createdby, e.emp_createddt,
+                e.emp_aadhar, e.emp_pan,
                 d.designation_code, d.designation_name, d.designation_level
          FROM employee e
          JOIN emp_designation d ON e.emp_designation_code = d.designation_code
@@ -28,20 +42,29 @@ router.get("/", async (req, res) => {
         `SELECT e.emp_id, e.emp_fname, e.emp_lname, e.emp_email, e.emp_phone,
                 e.emp_branch_code, e.emp_city, e.emp_state, e.emp_joindt,
                 e.emp_status, e.emp_reporting_manager_id, e.emp_createdby, e.emp_createddt,
+                e.emp_aadhar, e.emp_pan,
                 d.designation_code, d.designation_name, d.designation_level
          FROM employee e
          JOIN emp_designation d ON e.emp_designation_code = d.designation_code
          ORDER BY e.emp_id`
       );
     }
-    res.json({ success: true, data: result.rows });
+
+    // Decrypt Aadhar/PAN for each employee before sending it to the frontend
+    const rows = result.rows.map((row) => ({
+      ...row,
+      emp_aadhar: safeDecrypt(row.emp_aadhar),
+      emp_pan: safeDecrypt(row.emp_pan),
+    }));
+
+    res.json({ success: true, data: rows });
   } catch (err) {
     console.error("Get employees error:", err);
     res.status(500).json({ success: false, message: "Server error." });
   }
 });
 
-// POST a new employee
+// POST a new employee (unchanged from before)
 router.post("/", async (req, res) => {
   const {
     emp_id,

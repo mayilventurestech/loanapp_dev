@@ -4,16 +4,38 @@ const { encryptValue, decryptValue, hashValue } = require("../crypto-helper");
 
 const router = express.Router();
 
+// Safely turns a stored (base64) Aadhar/PAN value back into plain text.
+// Returns null if there's nothing stored, or if it can't be decrypted
+// (this protects against old/test rows that were never properly encrypted).
+function safeDecrypt(base64Value) {
+  if (!base64Value) return null;
+  try {
+    const buffer = Buffer.from(base64Value, "base64");
+    return decryptValue(buffer);
+  } catch (err) {
+    return null;
+  }
+}
+
 router.get("/", async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT cust_pk, cust_id, cust__fname, cust_lname, cust_email, cust_phone,
               cust_country, cust_addressline1, cust_addressline2, cust_city,
-              cust_state, cust_pinzip, cust_createddt, cust_insertedby_empid
+              cust_state, cust_pinzip, cust_createddt, cust_insertedby_empid,
+              cust_aadhar, cust_pan
        FROM customer
        ORDER BY cust_pk DESC`
     );
-    res.json({ success: true, data: result.rows });
+
+    // Decrypt Aadhar/PAN for each customer before sending it to the frontend
+    const rows = result.rows.map((row) => ({
+      ...row,
+      cust_aadhar: safeDecrypt(row.cust_aadhar),
+      cust_pan: safeDecrypt(row.cust_pan),
+    }));
+
+    res.json({ success: true, data: rows });
   } catch (err) {
     console.error("Get customers error:", err);
     res.status(500).json({ success: false, message: "Server error." });
