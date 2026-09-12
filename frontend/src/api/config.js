@@ -2,6 +2,8 @@
 // helper function that every other api/*.js file uses to talk to it.
 
 const API_BASE_URL = 'http://localhost:8000/api';
+//const API_BASE_URL = 'http://Render.com/api';
+
 
 // path: e.g. '/login', '/customers', '/employees'
 // options: normal fetch options, e.g. { method: 'POST', body: JSON.stringify(...) }

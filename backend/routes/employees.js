@@ -127,6 +127,25 @@ router.post("/", async (req, res) => {
       ]
     );
 
+    // Automatically give this new employee a login too, so they can sign
+    // into the app themselves - using a shared temporary password for now
+    // (same one used for the other test accounts: Admin@123).
+    // Wrapped in its own try/catch so that if this part fails for any
+    // reason, the employee record we just successfully created is still
+    // saved and returned - only the login creation is skipped.
+    try {
+      const DEFAULT_PASSWORD_HASH =
+        "e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7"; // Admin@123
+      await pool.query(
+        `INSERT INTO tbl_applogin (employee_fname, employee_lname, email, password_hash, role)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (email) DO NOTHING`,
+        [emp_fname, emp_lname, emp_email, DEFAULT_PASSWORD_HASH, "Employee"]
+      );
+    } catch (loginErr) {
+      console.error("Could not auto-create login for new employee:", loginErr);
+    }
+
     res.status(201).json({ success: true, data: result.rows[0] });
   } catch (err) {
     console.error("Create employee error:", err);
