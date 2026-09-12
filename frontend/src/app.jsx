@@ -1071,7 +1071,11 @@ useEffect(() => {
       emp_status: true,
       emp_designation_code: newEmployee.Emp_designation_code.trim(),
       emp_reporting_manager_id: null,
-      emp_createdby: username || null
+      // emp_createdby must be a real Employee ID (EMP024, etc.) because the
+      // database checks it against the employee table - sending the logged-in
+      // user's email here caused every save to fail with a server error.
+      // Leaving it blank for now until we look up the logged-in employee's real ID.
+      emp_createdby: null
     };
 
     try {

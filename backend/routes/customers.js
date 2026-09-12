@@ -72,13 +72,21 @@ router.post("/", async (req, res) => {
     const aadharHash = hashValue(cust_aadhar);
     const panHash = hashValue(cust_pan);
 
+    // cust_insertedby_empid is required by the database (NOT NULL) but the
+    // frontend doesn't currently send it (there's no "which employee is
+    // logged in" tracking yet). Rather than fail every customer save, fall
+    // back to Kamala's employee record (EMP024) when nothing was sent, so
+    // this doesn't block saving while that bigger feature gets built later.
     const result = await pool.query(
       `INSERT INTO customer (
         cust__fname, cust_lname, cust_email, cust_phone,
         cust_aadhar, cust_pan, cust_aadhar_hash, cust_pan_hash,
         cust_country, cust_addressline1, cust_addressline2,
         cust_city, cust_state, cust_pinzip, cust_insertedby_empid
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+      ) VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,
+        COALESCE($15, (SELECT emp_pk FROM employee WHERE emp_id = 'EMP024'))
+      )
       RETURNING cust_pk, cust_id, cust__fname, cust_lname, cust_email, cust_phone,
                 cust_country, cust_addressline1, cust_addressline2, cust_city,
                 cust_state, cust_pinzip, cust_createddt, cust_insertedby_empid`,
@@ -97,7 +105,7 @@ router.post("/", async (req, res) => {
         cust_city,
         cust_state,
         cust_pinzip,
-        cust_insertedby_empid,
+        cust_insertedby_empid || null,
       ]
     );
 
