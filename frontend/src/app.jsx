@@ -888,7 +888,10 @@ useEffect(() => {
       setCustomerTopError('Could not reach the server. Check that your backend is running on port 8000.');
     }
 
-    setTimeout(() => setSuccessMessage(''), 4000);
+    // Message stays up for 8 seconds total (2s on this form + 6s after
+    // landing on the dashboard) so there's actually enough time to read it,
+    // instead of it vanishing right after the page switch.
+    setTimeout(() => setSuccessMessage(''), 10000);
   };
 
   const clearCustomerForm = () => {
@@ -1107,7 +1110,10 @@ useEffect(() => {
       setEmployeeTopError('Could not reach the server. Check that your backend is running on port 8000.');
     }
 
-    setTimeout(() => setSuccessMessage(''), 4000);
+    // Message stays up for 8 seconds total (2s on this form + 6s after
+    // landing on the Employee Records page) so there's actually enough
+    // time to read it, instead of it vanishing right after the page switch.
+    setTimeout(() => setSuccessMessage(''), 8000);
   };
 
   const handleEditEmployee = (emp) => {
