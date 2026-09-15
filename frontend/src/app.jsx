@@ -511,6 +511,18 @@ function App() {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
 
+  // Role-based page access: the list of {feature_code, can_view, can_edit,
+  // can_delete} rows the backend sends back at login, based on this
+  // person's role. The navigation menu below uses canView() to decide
+  // which buttons to show - e.g. a Customer login will only get
+  // can_view = true for LOAN_MGMT and REPAYMENT_CALC, so only those two
+  // menu items appear for them.
+  const [permissions, setPermissions] = useState([]);
+  const canView = (featureCode) => {
+    const perm = permissions.find((p) => p.feature_code === featureCode);
+    return perm ? perm.can_view : false;
+  };
+
   const [loanData, setLoanData] = useState(null);
   // Real customers loaded from the database (was hardcoded sample data before)
   const [customers, setCustomers] = useState([]);
@@ -697,6 +709,9 @@ useEffect(() => {
       if (data.success) {
         setAuthToken(data.token);
         setIsLoggedIn(true);
+        // Store this person's role-based permissions so the menu below
+        // knows exactly which pages to show them.
+        setPermissions(data.permissions || []);
         fetchLoanDataLocally();
         loadCustomersAndEmployees(data.token);
       } else {
@@ -891,7 +906,7 @@ useEffect(() => {
     // Message stays up for 8 seconds total (2s on this form + 6s after
     // landing on the dashboard) so there's actually enough time to read it,
     // instead of it vanishing right after the page switch.
-    setTimeout(() => setSuccessMessage(''), 10000);
+    setTimeout(() => setSuccessMessage(''), 8000);
   };
 
   const clearCustomerForm = () => {
@@ -1415,74 +1430,88 @@ useEffect(() => {
               </div>
               <div style={styles.navLinks}>
 
-                {/* INSERT HERE (Replaces old buttons inside navLinks):*/}
+                {/* Each menu item below only renders if this person's role
+                    has can_view = true for that feature - see canView()
+                    above. A Customer login, for example, will only see
+                    Loan Management and Repayment Calculation. */}
+
                 {/* Dashboard */}
-                <button
-                  onClick={() => setActiveTab('dashboard')}
-                  style={{ ...styles.navItem, color: '#374151', ...(activeTab === 'dashboard' ? styles.activeNavItem : {}) }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px' }}>
-                    <rect x="3" y="3" width="7" height="7"></rect>
-                    <rect x="14" y="3" width="7" height="7"></rect>
-                    <rect x="14" y="14" width="7" height="7"></rect>
-                    <rect x="3" y="14" width="7" height="7"></rect>
-                  </svg>
-                  Dashboard
-                </button>
+                {canView('DASHBOARD') && (
+                  <button
+                    onClick={() => setActiveTab('dashboard')}
+                    style={{ ...styles.navItem, color: '#374151', ...(activeTab === 'dashboard' ? styles.activeNavItem : {}) }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px' }}>
+                      <rect x="3" y="3" width="7" height="7"></rect>
+                      <rect x="14" y="3" width="7" height="7"></rect>
+                      <rect x="14" y="14" width="7" height="7"></rect>
+                      <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Dashboard
+                  </button>
+                )}
 
                 {/* Employee Management */}
-                <button
-                  onClick={() => setActiveTab('employeeRecords')}
-                  style={{ ...styles.navItem, color: '#374151', ...(activeTab === 'employeeRecords' || activeTab === 'addEmployee' ? styles.activeNavItem : {}) }}>
-<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px' }}>
-    {/* ID Badge Outer Frame */}
-    <rect x="3" y="4" width="18" height="16" rx="2"></rect>
-    {/* Photo Head */}
-    <circle cx="12" cy="10" r="3"></circle>
-    {/* Photo Shoulders */}
-    <path d="M7 17c0-2 2.5-3 5-3s5 1 5 3"></path>
-    {/* Lanyard Clip Line */}
-    <line x1="12" y1="2" x2="12" y2="4"></line>
-  </svg>
-                  Employee Management
-                </button>
+                {canView('EMPLOYEE_MGMT') && (
+                  <button
+                    onClick={() => setActiveTab('employeeRecords')}
+                    style={{ ...styles.navItem, color: '#374151', ...(activeTab === 'employeeRecords' || activeTab === 'addEmployee' ? styles.activeNavItem : {}) }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px' }}>
+                      {/* ID Badge Outer Frame */}
+                      <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                      {/* Photo Head */}
+                      <circle cx="12" cy="10" r="3"></circle>
+                      {/* Photo Shoulders */}
+                      <path d="M7 17c0-2 2.5-3 5-3s5 1 5 3"></path>
+                      {/* Lanyard Clip Line */}
+                      <line x1="12" y1="2" x2="12" y2="4"></line>
+                    </svg>
+                    Employee Management
+                  </button>
+                )}
 
                 {/* Customer Management */}
-                <button
-                  onClick={() => setActiveTab('customerRecords')}
-                  style={{ ...styles.navItem, color: '#374151', ...(activeTab === 'customerRecords' || activeTab === 'addCustomer' ? styles.activeNavItem : {}) }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px' }}>
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
-                  Customer Management
-                </button>
+                {canView('CUSTOMER_MGMT') && (
+                  <button
+                    onClick={() => setActiveTab('customerRecords')}
+                    style={{ ...styles.navItem, color: '#374151', ...(activeTab === 'customerRecords' || activeTab === 'addCustomer' ? styles.activeNavItem : {}) }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px' }}>
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    Customer Management
+                  </button>
+                )}
 
                 {/* Loan Management */}
-                <button
-                  onClick={() => setActiveTab('loanRecords')}
-                  style={{ ...styles.navItem, color: '#374151', ...(activeTab === 'loanRecords' || activeTab === 'addNewLoan' || activeTab === 'reviewRepaymentSchedule' ? styles.activeNavItem : {}) }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px' }}>
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                    <polyline points="10 9 9 9 8 9"></polyline>
-                  </svg>
-                  Loan Management
-                </button>
+                {canView('LOAN_MGMT') && (
+                  <button
+                    onClick={() => setActiveTab('loanRecords')}
+                    style={{ ...styles.navItem, color: '#374151', ...(activeTab === 'loanRecords' || activeTab === 'addNewLoan' || activeTab === 'reviewRepaymentSchedule' ? styles.activeNavItem : {}) }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px' }}>
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                      <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Loan Management
+                  </button>
+                )}
 
                 {/* Repayment Calculation */}
-                <button
-                  onClick={() => setActiveTab('repaymentSchedule')}
-                  style={{ ...styles.navItem, color: '#374151', ...(activeTab === 'repaymentSchedule' ? styles.activeNavItem : {}) }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px' }}>
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                  </svg>
-                  Repayment Calculation
-                </button>
+                {canView('REPAYMENT_CALC') && (
+                  <button
+                    onClick={() => setActiveTab('repaymentSchedule')}
+                    style={{ ...styles.navItem, color: '#374151', ...(activeTab === 'repaymentSchedule' ? styles.activeNavItem : {}) }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '10px' }}>
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    Repayment Calculation
+                  </button>
+                )}
               </div>
 
               <div style={styles.sidebarFooter}>
